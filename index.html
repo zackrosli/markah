@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pengesahan Kehadiran Peserta</title>
+
+<style>
+/* ======================= RESET ======================= */
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+:root{
+  --bg-overlay: rgba(15, 23, 42, 0.38);
+  --card:#ffffff;
+  --text:#0f172a;
+  --muted:#64748b;
+  --border:#e5e7eb;
+  --primary:#1d4ed8;
+  --primary-2:#1e40af;
+  --success:#16a34a;
+  --danger:#dc2626;
+  --shadow: 0 10px 25px rgba(15,23,42,.12);
+  --shadow-strong: 0 20px 50px rgba(0,0,0,.18);
+  --radius: 16px;
+}
+
+body{
+  min-height:100vh;
+  padding:20px;
+  background:url('https://i.imgur.com/YeoZLOx.png') center/cover fixed no-repeat;
+  color:var(--text);
+}
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:var(--bg-overlay);
+  z-index:0;
+}
+body.report-mode{ overflow:hidden; }
+
+/* ======================= PAGE TRANSITION ======================= */
+.page{
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .35s ease;
+}
+.page.active{
+  opacity:1;
+  pointer-events:auto;
+}
+
+/* ======================= LAYOUT SHELL ======================= */
+.shell{
+  position:relative;
+  z-index:1;
+  max-width:860px;
+  margin:0 auto;
+}
+
+/* ======================= HEADER ======================= */
+.header{
+  background:rgba(255,255,255,.92);
+  backdrop-filter: blur(8px);
+  border:1px solid rgba(229,231,235,.7);
+  box-shadow: var(--shadow);
+  border-radius: var(--radius);
+  padding:18px 18px 16px;
+  margin-bottom:14px;
+}
+.header h1{
+  font-size:18px;
+  letter-spacing:.2px;
+  color:#0b1220;
+  text-align:center;
+}
+.header p{
+  margin-top:6px;
+  font-size:12px;
+  color:var(--muted);
+  text-align:center;
+}
+
+/* ======================= CARD ======================= */
+.card{
+  background:rgba(255,255,255,.96);
+  backdrop-filter: blur(8px);
+  border:1px solid rgba(229,231,235,.75);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding:18px;
+}
+
+/* ======================= FORM ======================= */
+.field{
+  margin-top:10px;
+}
+label{
+  font-weight:700;
+  font-size:12px;
+  color:#1f2937;
+}
+input{
+  width:100%;
+  padding:13px 14px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  margin-top:8px;
+  outline:none;
+  font-size:14px;
+  background:#fff;
+}
+input:focus{
+  border-color: rgba(29,78,216,.65);
+  box-shadow: 0 0 0 3px rgba(29,78,216,.15);
+}
+
+.btn{
+  width:100%;
+  border:none;
+  border-radius:999px;
+  padding:12px 14px;
+  font-weight:800;
+  font-size:14px;
+  cursor:pointer;
+  display:inline-flex;
+  justify-content:center;
+  align-items:center;
+  gap:10px;
+  user-select:none;
+}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--primary-2)}
+.btn-success{background:var(--success);color:#fff}
+.btn:disabled{opacity:.65;cursor:not-allowed}
+.btn-ghost{
+  background:#eef2ff;
+  color:#111827;
+}
+.btn-ghost:hover{
+  background:#e0e7ff;
+}
+
+/* loader */
+.spinner{
+  width:16px;height:16px;border-radius:50%;
+  border:2px solid rgba(255,255,255,.6);
+  border-top-color:#fff;
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ======================= STEP INDICATOR ======================= */
+.steps{
+  display:flex;
+  gap:10px;
+  margin-top:14px;
+  flex-wrap:wrap;
+}
+.step{
+  flex:1;
+  min-width:120px;
+  background:#f8fafc;
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:10px 12px;
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+}
+.step .dot{
+  width:18px;height:18px;border-radius:50%;
+  background:#e5e7eb;
+  margin-top:2px;
+  position:relative;
+}
+.step.done .dot{ background:rgba(22,163,74,.18); }
+.step.done .dot::after{
+  content:"";
+  position:absolute; inset:4px;
+  border-radius:50%;
+  background: var(--success);
+}
+.step.active{
+  border-color: rgba(29,78,216,.35);
+  box-shadow: 0 0 0 3px rgba(29,78,216,.10);
+}
+.step.active .dot{
+  background: rgba(29,78,216,.18);
+}
+.step.active .dot::after{
+  content:"";
+  position:absolute; inset:4px;
+  border-radius:50%;
+  background: var(--primary);
+}
+.step .meta{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.step .title{
+  font-size:12px;
+  font-weight:800;
+  color:#0f172a;
+}
+.step .desc{
+  font-size:11px;
+  color:var(--muted);
+}
+
+/* ======================= INFO TABLE ======================= */
+.info-table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:14px;
+  overflow:hidden;
+  border-radius:12px;
+}
+.info-table th, .info-table td{
+  border:1px solid var(--border);
+  padding:10px 12px;
+  font-size:13px;
+}
+.info-table th{
+  width:42%;
+  background:#f8fafc;
+  text-align:left;
+  color:#111827;
+}
+
+/* ======================= NOTIFY (TOAST) ======================= */
+.toast{
+  position:fixed;
+  left:50%;
+  transform:translateX(-50%);
+  top:14px;
+  z-index:9999;
+  width:min(520px, calc(100% - 24px));
+  display:none;
+}
+.toast.show{ display:block; }
+.toast-inner{
+  background:rgba(255,255,255,.96);
+  border:1px solid rgba(229,231,235,.9);
+  box-shadow: var(--shadow);
+  border-radius:14px;
+  padding:12px 14px;
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+}
+.badge{
+  width:10px;height:10px;border-radius:99px;margin-top:4px;
+}
+.badge.ok{ background: var(--success); }
+.badge.err{ background: var(--danger); }
+.badge.info{ background: var(--primary); }
+
+.toast-title{
+  font-weight:900;
+  font-size:12px;
+  margin-bottom:2px;
+}
+.toast-msg{
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.35;
+}
+
+/* ======================= VISIBILITY ======================= */
+#pesertaDetail, #detailPesertaContainer{ display:none; }
+
+/* ======================= REPORT PAGE (NO SCROLL) ======================= */
+#pageReport{
+  position:fixed;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:2;
+  padding:18px;
+}
+
+/* report container */
+.report-wrap{
+  width:100%;
+  max-width:720px;
+  height:100%;
+  max-height: calc(100vh - 36px);
+  border-radius:20px;
+  overflow:hidden;
+  box-shadow: var(--shadow-strong);
+  background:#fff;
+  display:flex;
+  flex-direction:column;      /* mobile stack */
+}
+
+/* desktop split */
+@media (min-width: 1024px){
+  .report-wrap{ flex-direction:row; }
+}
+
+/* left score */
+.result-card{
+  flex:1;
+  padding:32px;
+  text-align:center;
+  background:linear-gradient(
+    180deg,
+    var(--primary),
+    var(--primary-2)
+  );
+  color:#fff;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+
+.label{
+  font-size:12px;
+  letter-spacing:.10em;
+  opacity:.75;
+  font-weight:800;
+}
+
+.score-circle{
+  width:150px;
+  height:150px;
+  margin:22px auto 10px;
+  position:relative;
+}
+svg{width:100%;height:100%;transform:rotate(-90deg)}
+circle{fill:none;stroke-width:14;stroke-linecap:round}
+.bg{stroke:rgba(255,255,255,.18)}
+.progress{ stroke:#ffffff; }
+
+.score-text{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.score-text h1{
+  font-size:52px;
+  font-weight:900;
+  letter-spacing:.5px;
+}
+#grade{ margin-top:6px;font-size:18px;font-weight:900; }
+.remark{ margin-top:6px;font-size:12px;opacity:.85;line-height:1.35; }
+
+/* right profile */
+.profile-card{
+  flex:1;
+  padding:30px 26px;
+  background:#f1f5f9;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+.profile-title{
+  font-size:12px;
+  letter-spacing:.08em;
+  font-weight:900;
+  color:#0f172a;
+  opacity:.75;
+  text-align:center;
+}
+.profile-name{
+  font-size:18px;
+  font-weight:900;
+  text-align:center;
+  margin-top:8px;
+}
+.profile-sub{
+  font-size:12px;
+  color:var(--muted);
+  text-align:center;
+  margin-top:6px;
+  margin-bottom:18px;
+}
+
+.pinfo{
+  background:#ffffff;
+  border:1px solid #e2e8f0;
+}
+.p-row span{
+  color:#475569;
+}
+
+.p-row{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 14px;
+  font-size:13px;
+  border-bottom:1px solid var(--border);
+}
+.p-row:last-child{border-bottom:none}
+.p-row span{ color:var(--muted); font-weight:700; }
+.p-row strong{ font-weight:900; color:#0f172a; }
+
+.report-actions{
+  margin-top:16px;
+}
+.report-actions .btn{
+  background:rgba(255,255,255,.15);
+  border:1px solid rgba(255,255,255,.25);
+}
+.report-actions .btn:hover{
+  background:rgba(255,255,255,.22);
+}
+
+/* mobile spacing adjustments */
+@media (max-width: 420px){
+  .card{ padding:16px; }
+  .header{ padding:16px; }
+  .result-card{ padding:26px; }
+  .profile-card{ padding:22px; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-inner">
+    <div class="badge info" id="toastBadge"></div>
+    <div>
+      <div class="toast-title" id="toastTitle">Info</div>
+      <div class="toast-msg" id="toastMsg">-</div>
+    </div>
+  </div>
+</div>
+
+<div class="shell">
+
+  <!-- PAGE A -->
+  <div class="page active" id="pageUtama">
+
+    <div class="header">
+      <h1>SISTEM PEMARKAHAN LATIHAN TEMBAK</h1>
+      <p>(SPLT)</p>
+
+    </div>
+
+    <div class="card">
+
+      <div class="field">
+        <label for="noKadPengenalan">No. Kad Pengenalan / No. Badan</label>
+        <input id="noKadPengenalan" placeholder="Masukkan No. KP tanpa (-) / No. Badan tanpa (G)" autocomplete="off" />
+      </div>
+
+      <button id="btnCariPeserta" class="btn btn-primary" type="button">
+        <span> Cari Peserta</span>
+      </button>
+
+      <div class="steps">
+
+  <div class="step active" id="stepCari">
+    <div class="dot"></div>
+    <div class="meta">
+      <div class="title">Pengesahan Peserta</div>
+      <div class="desc">Semakan maklumat peserta berdaftar</div>
+    </div>
+  </div>
+
+  <div class="step" id="stepSah">
+    <div class="dot"></div>
+    <div class="meta">
+      <div class="title">Pengesahan Kehadiran</div>
+      <div class="desc">Pengaktifan kehadiran latihan</div>
+    </div>
+  </div>
+
+  <div class="step" id="stepSemak">
+    <div class="dot"></div>
+    <div class="meta">
+      <div class="title">Paparan Keputusan</div>
+      <div class="desc">Paparan keputusan markah rasmi</div>
+    </div>
+  </div>
+
+</div>
+
+
+      <div id="pesertaDetail">
+        <table class="info-table">
+          <tr><th>Nama</th><td id="pesertaNama">-</td></tr>
+          <tr><th>Jabatan / Agensi</th><td id="pesertaAgensi">-</td></tr>
+        </table>
+
+        <button id="btnSahkanKehadiran" class="btn btn-primary" type="button">
+          <span>Sahkan Kehadiran</span>
+        </button>
+
+        <div id="detailPesertaContainer">
+          <table class="info-table">
+            <tr><th>Sasaran</th><td id="sasaranPeserta">-</td></tr>
+            <tr><th>Detail</th><td id="noDetailPeserta">-</td></tr>
+          </table>
+
+          <button id="btnSemakMarkah" class="btn btn-success" type="button">
+            <span>Semak Markah</span>
+          </button>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PAGE B -->
+  <div class="page" id="pageReport">
+    <div class="report-wrap">
+
+      <div class="result-card">
+        <div class="label">MARKAH</div>
+
+        <div class="score-circle">
+          <svg viewBox="0 0 160 160" aria-hidden="true">
+            <circle class="bg" cx="80" cy="80" r="70"></circle>
+            <circle class="progress" cx="80" cy="80" r="70"></circle>
+          </svg>
+          <div class="score-text"><h1 id="totalScore">0</h1></div>
+        </div>
+
+        <div id="grade">-</div>
+        <div class="remark" id="remark"></div>
+
+        <div class="report-actions">
+          <button class="btn btn-primary" type="button" onclick="kembaliKeUtama()">
+            ⬅ Kembali
+          </button>
+        </div>
+      </div>
+
+      <div class="profile-card">
+        <div class="profile-title">PROFIL PESERTA</div>
+        <div class="profile-name" id="profilNama">-</div>
+        <div class="profile-sub" id="profilAgensi">-</div>
+
+        <div class="pinfo">
+          <div class="p-row">
+            <span>Sasaran</span>
+            <strong id="profilSasaran">-</strong>
+          </div>
+          <div class="p-row">
+            <span>Detail</span>
+            <strong id="profilDetail">-</strong>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+
+/* ======================= API CONFIG ======================= */
+const API_URL = "https://script.google.com/macros/s/AKfycbwJqjp62cvk4-60NOf539UHnrVfToUJ6Q03WlrzoOqcb5lp2ZafcRLmV3FXunzOp9DM/exec";
+
+function api(action, noKP){
+  return fetch(API_URL,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ action, noKP })
+  }).then(res=>res.json());
+}
+
+/* ======================= STATE ======================= */
+let currentPeserta = null;
+
+/* ======================= TOAST ======================= */
+let toastTimer = null;
+function showToast(type, title, msg){
+  const toast = $("toast");
+  const badge = $("toastBadge");
+  badge.className = "badge " + (type==="ok"?"ok":type==="err"?"err":"info");
+  $("toastTitle").textContent = title || "Info";
+  $("toastMsg").textContent = msg || "-";
+  toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>toast.classList.remove("show"),2800);
+}
+
+/* ======================= STEP ======================= */
+function setStep(which){
+  ["Cari","Sah","Semak"].forEach(s=>{
+    $("step"+s).classList.remove("active","done");
+  });
+  if(which==="Cari") $("stepCari").classList.add("active");
+  if(which==="Sah"){
+    $("stepCari").classList.add("done");
+    $("stepSah").classList.add("active");
+  }
+  if(which==="Semak"){
+    $("stepCari").classList.add("done");
+    $("stepSah").classList.add("done");
+    $("stepSemak").classList.add("active");
+  }
+}
+
+/* ======================= BUTTON ======================= */
+function lockBtn(btn, locked, text){
+  btn.disabled = locked;
+  if(locked){
+    btn.dataset.txt = btn.textContent;
+    btn.innerHTML = `<span class="spinner"></span>${text||"Memproses..."}`;
+  }else{
+    btn.textContent = btn.dataset.txt || btn.textContent;
+  }
+}
+
+/* ======================= RESET ======================= */
+function resetUI(){
+  currentPeserta = null;
+  $("noKadPengenalan").value = "";
+  $("pesertaDetail").style.display = "none";
+  $("detailPesertaContainer").style.display = "none";
+  $("btnSahkanKehadiran").disabled = false;
+  $("btnSahkanKehadiran").textContent = "Sahkan Kehadiran";
+  setStep("Cari");
+}
+
+/* ======================= CARI PESERTA ======================= */
+$("btnCariPeserta").onclick = () => {
+  const noKP = $("noKadPengenalan").value.trim();
+  if(!noKP) return showToast("err","Makluman","Sila masukkan No. KP / No. Badan.");
+
+  lockBtn($("btnCariPeserta"),true,"Mencari...");
+
+  api("cari",noKP)
+    .then(p=>{
+      lockBtn($("btnCariPeserta"),false);
+      if(!p) return showToast("err","Tidak ditemui","Peserta tidak ditemui.");
+
+      currentPeserta = p;
+      $("pesertaNama").textContent = p.nama || "-";
+      $("pesertaAgensi").textContent = p.agensi || "-";
+      $("pesertaDetail").style.display = "block";
+
+      if(p.sudahSah){
+        $("btnSahkanKehadiran").disabled = true;
+        $("btnSahkanKehadiran").textContent = "Kehadiran Telah Disahkan";
+        $("sasaranPeserta").textContent = p.sasaran ?? "-";
+        $("noDetailPeserta").textContent = p.detail ?? "-";
+        $("detailPesertaContainer").style.display = "block";
+        setStep("Semak");
+      }else{
+        $("btnSahkanKehadiran").disabled = false;
+        $("btnSahkanKehadiran").textContent = "Sahkan Kehadiran";
+        $("detailPesertaContainer").style.display = "none";
+        setStep("Sah");
+      }
+
+      showToast("ok","Berjaya","Maklumat peserta ditemui.");
+    })
+    .catch(()=>showToast("err","Ralat","Ralat semasa carian."));
+};
+
+/* ======================= SAHKAN KEHADIRAN ======================= */
+$("btnSahkanKehadiran").onclick = () => {
+  if(!currentPeserta) return;
+
+  const btn = $("btnSahkanKehadiran");
+  lockBtn(btn,true,"Mengesahkan...");
+
+  api("sah",$("noKadPengenalan").value.trim())
+    .then(r=>{
+      lockBtn(btn,false);
+
+      if(r.status==="sah"||r.status==="sudah_sah"){
+        btn.disabled = true;
+        btn.textContent = "Kehadiran Telah Disahkan";
+
+        $("sasaranPeserta").textContent = r.sasaran ?? "-";
+        $("noDetailPeserta").textContent = r.detail ?? "-";
+        $("detailPesertaContainer").style.display = "block";
+
+        currentPeserta.sasaran = r.sasaran;
+        currentPeserta.detail = r.detail;
+
+        setStep("Semak");
+        showToast("ok","Disahkan","Kehadiran berjaya disahkan.");
+      }else{
+        showToast("err","Gagal",r.mesej||"Gagal sahkan kehadiran.");
+      }
+    })
+    .catch(()=>showToast("err","Ralat","Ralat semasa pengesahan."));
+};
+
+/* ======================= SEMAK MARKAH ======================= */
+$("btnSemakMarkah").onclick = () => {
+  api("markah",$("noKadPengenalan").value.trim())
+    .then(r=>{
+      if(!r || !r.markah || Number(r.markah)<=0){
+        showToast("info","Markah Belum Tersedia","Markah belum direkodkan.");
+        return;
+      }
+      renderReport(r);
+      document.body.classList.add("report-mode");
+      $("pageUtama").classList.remove("active");
+      $("pageReport").classList.add("active");
+    })
+    .catch(()=>showToast("err","Ralat","Ralat semakan markah."));
+};
+
+/* ======================= ANIMASI MARKAH ======================= */
+function animateNumber(el,start,end,duration=800){
+  let startTime=null;
+  function step(t){
+    if(!startTime) startTime=t;
+    const p=Math.min((t-startTime)/duration,1);
+    el.textContent=Math.floor(start+(end-start)*p);
+    if(p<1) requestAnimationFrame(step);
+    else el.textContent=end;
+  }
+  requestAnimationFrame(step);
+}
+
+/* ======================= REPORT ======================= */
+function renderReport(r){
+  animateNumber($("totalScore"),0,Number(r.markah),900);
+  $("grade").textContent="Keputusan Rasmi";
+  $("remark").textContent="";
+  $("profilNama").textContent=currentPeserta.nama;
+  $("profilAgensi").textContent=currentPeserta.agensi;
+  $("profilSasaran").textContent=currentPeserta.sasaran;
+  $("profilDetail").textContent=currentPeserta.detail;
+}
+
+/* ======================= BACK ======================= */
+function kembaliKeUtama(){
+  document.body.classList.remove("report-mode");
+  $("pageReport").classList.remove("active");
+  $("pageUtama").classList.add("active");
+}
+
+$("btnReset").onclick = resetUI;
+</script>
+
+
+
+</body>
+</html>
