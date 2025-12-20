@@ -565,12 +565,12 @@ const $ = (id) => document.getElementById(id);
 const API_URL = "https://script.google.com/macros/s/AKfycbxq2oPePSk4oCjZesDvjCn2KB-S90a9ZPrGExKgr4SphXm_-xgzU3WsiJ2jGPL7fTOf/exec";
 
 function api(action, noKP){
-  fetch(API_URL,{
-  method: "POST",
-  body: JSON.stringify({ action, noKP })
-})
-
+  return fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify({ action, noKP })
+  }).then(res => res.json());
 }
+
 
 /* ======================= STATE ======================= */
 let currentPeserta = null;
