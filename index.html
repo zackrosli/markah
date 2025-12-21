@@ -428,6 +428,9 @@ circle{fill:none;stroke-width:14;stroke-linecap:round}
   margin-bottom:10px;
 }
 
+
+
+
 /* mobile spacing adjustments */
 @media (max-width: 420px){
   .card{ padding:16px; }
@@ -550,7 +553,6 @@ circle{fill:none;stroke-width:14;stroke-linecap:round}
         <div id="grade">-</div>
         <div class="remark" id="remark"></div>
 
-
         <div class="report-actions">
           <button class="btn btn-primary" type="button" onclick="kembaliKeUtama()">
             ⬅ Kembali
@@ -589,12 +591,8 @@ const API_URL = "https://script.google.com/macros/s/AKfycbxq2oPePSk4oCjZesDvjCn2
 function api(action, noKP){
   return fetch(API_URL, {
     method: "POST",
-    headers: {
-      "Content-Type": "text/plain;charset=utf-8"
-    },
     body: JSON.stringify({ action, noKP })
-  })
-  .then(res => res.json());
+  }).then(res => res.json());
 }
 
 
@@ -749,7 +747,6 @@ function animateNumber(el,start,end,duration=800){
   requestAnimationFrame(step);
 }
 
-dalam ni ke?
 /* ======================= REPORT ======================= */
 function renderReport(r){
   animateNumber($("totalScore"),0,Number(r.markah),900);
