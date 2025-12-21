@@ -428,23 +428,6 @@ circle{fill:none;stroke-width:14;stroke-linecap:round}
   margin-bottom:10px;
 }
 
-.ranking-text{
-  font-size:13px;
-  font-weight:600;
-  opacity:.85;
-  margin-top:4px;
-}
-
-.ranking-note{
-  margin-top:6px;
-  font-size:11px;
-  opacity:.65;
-  font-style:italic;
-  line-height:1.4;
-}
-
-
-
 /* mobile spacing adjustments */
 @media (max-width: 420px){
   .card{ padding:16px; }
@@ -565,11 +548,7 @@ circle{fill:none;stroke-width:14;stroke-linecap:round}
         </div>
 
         <div id="grade">-</div>
-
-<div class="ranking-text" id="rankingText"></div>
-<div class="ranking-note" id="rankingNote"></div>
-
-<div class="remark" id="remark"></div>
+        <div class="remark" id="remark"></div>
 
 
         <div class="report-actions">
@@ -771,37 +750,17 @@ function animateNumber(el,start,end,duration=800){
   requestAnimationFrame(step);
 }
 
+dalam ni ke?
 /* ======================= REPORT ======================= */
 function renderReport(r){
-  // Animasi markah
-  animateNumber($("totalScore"), 0, Number(r.markah), 900);
-
-  // Tajuk keputusan
-  $("grade").textContent = "Keputusan Rasmi";
-  $("remark").textContent = "";
-
-  // Ranking (sementara / live)
-  const rankingText = $("rankingText");
-  const rankingNote = $("rankingNote");
-
-  if (rankingText && rankingNote && r && r.ranking) {
-    rankingText.textContent = `(Ranking Terkini: ${r.ranking})`;
-    rankingNote.textContent =
-      "Kedudukan akan dikemas kini secara berperingkat sepanjang program berlangsung.";
-  } else {
-    // Selamat walaupun ranking belum wujud
-    if (rankingText) rankingText.textContent = "";
-    if (rankingNote) rankingNote.textContent = "";
-  }
-
-  // Profil peserta
-  $("profilNama").textContent    = currentPeserta.nama;
-  $("profilAgensi").textContent  = currentPeserta.agensi;
-  $("profilSasaran").textContent = currentPeserta.sasaran;
-  $("profilDetail").textContent  = currentPeserta.detail;
+  animateNumber($("totalScore"),0,Number(r.markah),900);
+  $("grade").textContent="Keputusan Rasmi";
+  $("remark").textContent="";
+  $("profilNama").textContent=currentPeserta.nama;
+  $("profilAgensi").textContent=currentPeserta.agensi;
+  $("profilSasaran").textContent=currentPeserta.sasaran;
+  $("profilDetail").textContent=currentPeserta.detail;
 }
-
-
 
 /* ======================= BACK ======================= */
 function kembaliKeUtama(){
