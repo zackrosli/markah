@@ -428,6 +428,20 @@ circle{fill:none;stroke-width:14;stroke-linecap:round}
   margin-bottom:10px;
 }
 
+.ranking-text{
+  font-size:13px;
+  font-weight:600;
+  opacity:.85;
+  margin-top:4px;
+}
+
+.ranking-note{
+  margin-top:6px;
+  font-size:11px;
+  opacity:.65;
+  font-style:italic;
+  line-height:1.4;
+}
 
 
 
@@ -749,14 +763,26 @@ function animateNumber(el,start,end,duration=800){
 
 /* ======================= REPORT ======================= */
 function renderReport(r){
-  animateNumber($("totalScore"),0,Number(r.markah),900);
-  $("grade").textContent="Keputusan Rasmi";
-  $("remark").textContent="";
-  $("profilNama").textContent=currentPeserta.nama;
-  $("profilAgensi").textContent=currentPeserta.agensi;
-  $("profilSasaran").textContent=currentPeserta.sasaran;
-  $("profilDetail").textContent=currentPeserta.detail;
+  animateNumber($("totalScore"), 0, Number(r.markah), 900);
+
+  $("grade").textContent = "Keputusan Rasmi";
+
+  // 🔹 Ranking (sementara / live)
+  if(r.ranking){
+    $("rankingText").textContent = `(Ranking Terkini: ${r.ranking})`;
+    $("rankingNote").textContent =
+      "Kedudukan akan dikemas kini secara berperingkat sepanjang program berlangsung.";
+  }else{
+    $("rankingText").textContent = "";
+    $("rankingNote").textContent = "";
+  }
+
+  $("profilNama").textContent    = currentPeserta.nama;
+  $("profilAgensi").textContent  = currentPeserta.agensi;
+  $("profilSasaran").textContent = currentPeserta.sasaran;
+  $("profilDetail").textContent  = currentPeserta.detail;
 }
+
 
 /* ======================= BACK ======================= */
 function kembaliKeUtama(){
