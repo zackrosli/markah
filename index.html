@@ -565,7 +565,12 @@ circle{fill:none;stroke-width:14;stroke-linecap:round}
         </div>
 
         <div id="grade">-</div>
-        <div class="remark" id="remark"></div>
+
+<div class="ranking-text" id="rankingText"></div>
+<div class="ranking-note" id="rankingNote"></div>
+
+<div class="remark" id="remark"></div>
+
 
         <div class="report-actions">
           <button class="btn btn-primary" type="button" onclick="kembaliKeUtama()">
@@ -768,25 +773,34 @@ function animateNumber(el,start,end,duration=800){
 
 /* ======================= REPORT ======================= */
 function renderReport(r){
+  // Animasi markah
   animateNumber($("totalScore"), 0, Number(r.markah), 900);
 
+  // Tajuk keputusan
   $("grade").textContent = "Keputusan Rasmi";
+  $("remark").textContent = "";
 
-  // 🔹 Ranking (sementara / live)
-  if(r.ranking){
-    $("rankingText").textContent = `(Ranking Terkini: ${r.ranking})`;
-    $("rankingNote").textContent =
+  // Ranking (sementara / live)
+  const rankingText = $("rankingText");
+  const rankingNote = $("rankingNote");
+
+  if (rankingText && rankingNote && r && r.ranking) {
+    rankingText.textContent = `(Ranking Terkini: ${r.ranking})`;
+    rankingNote.textContent =
       "Kedudukan akan dikemas kini secara berperingkat sepanjang program berlangsung.";
-  }else{
-    $("rankingText").textContent = "";
-    $("rankingNote").textContent = "";
+  } else {
+    // Selamat walaupun ranking belum wujud
+    if (rankingText) rankingText.textContent = "";
+    if (rankingNote) rankingNote.textContent = "";
   }
 
+  // Profil peserta
   $("profilNama").textContent    = currentPeserta.nama;
   $("profilAgensi").textContent  = currentPeserta.agensi;
   $("profilSasaran").textContent = currentPeserta.sasaran;
   $("profilDetail").textContent  = currentPeserta.detail;
 }
+
 
 
 /* ======================= BACK ======================= */
