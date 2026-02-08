@@ -637,16 +637,17 @@ $("btnCariPeserta").onclick = () => {
 
 /* ======================= SAHKAN KEHADIRAN ======================= */
 $("btnSahkanKehadiran").onclick = () => {
-  if(!currentPeserta) return;
+  if (!currentPeserta) return;
 
   const btn = $("btnSahkanKehadiran");
-  lockBtn(btn,true,"Mengesahkan...");
+  lockBtn(btn, true, "Mengesahkan...");
 
-  api("sah",$("noPersonal").value.trim())  // Gantikan noKadPengenalan dengan noPersonal
-    .then(r=>{
-      lockBtn(btn,false);
+  api("sah", $("noPersonal").value.trim())  // Gantikan noKadPengenalan dengan noPersonal
+    .then(r => {
+      console.log("Respons dari API: ", r);  // Log respons API untuk debugging
+      lockBtn(btn, false);
 
-      if(r.status==="sah"||r.status==="sudah_sah"){
+      if (r.status === "sah" || r.status === "sudah_sah") {
         btn.disabled = true;
         btn.textContent = "Kehadiran Telah Disahkan";
 
@@ -658,11 +659,16 @@ $("btnSahkanKehadiran").onclick = () => {
         currentPeserta.detail = r.detail;
 
         setStep("Semak");
-        showToast("ok","Disahkan","Kehadiran berjaya disahkan.");
-      }else{
-        showToast("err","Gagal",r.mesej||"Gagal sahkan kehadiran.");
+        showToast("ok", "Disahkan", "Kehadiran berjaya disahkan.");
+      } else {
+        showToast("err", "Gagal", r.mesej || "Gagal sahkan kehadiran.");
       }
     })
+    .catch(() => {
+      showToast("err", "Ralat", "Ralat semasa pengesahan.");
+      lockBtn(btn, false); // Unlock button on error
+    });
+};
     .catch(()=>showToast("err","Ralat","Ralat semasa pengesahan."));
 };
 
