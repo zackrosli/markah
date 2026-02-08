@@ -600,63 +600,6 @@ function api(action, noPersonal){
   }).then(res => res.json());
 }
 
-
-
-/* ======================= STATE ======================= */
-let currentPeserta = null;
-
-/* ======================= TOAST ======================= */
-let toastTimer = null;
-function showToast(type, title, msg){
-  const toast = $("toast");
-  const badge = $("toastBadge");
-  badge.className = "badge " + (type==="ok"?"ok":type==="err"?"err":"info");
-  $("toastTitle").textContent = title || "Info";
-  $("toastMsg").textContent = msg || "-";
-  toast.classList.add("show");
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>toast.classList.remove("show"),2800);
-}
-
-/* ======================= STEP ======================= */
-function setStep(which){
-  ["Cari","Sah","Semak"].forEach(s=>{
-    $("step"+s).classList.remove("active","done");
-  });
-  if(which==="Cari") $("stepCari").classList.add("active");
-  if(which==="Sah"){
-    $("stepCari").classList.add("done");
-    $("stepSah").classList.add("active");
-  }
-  if(which==="Semak"){
-    $("stepCari").classList.add("done");
-    $("stepSah").classList.add("done");
-    $("stepSemak").classList.add("active");
-  }
-}
-
-/* ======================= BUTTON ======================= */
-function lockBtn(btn, locked, text){
-  btn.disabled = locked;
-  if(locked){
-    btn.dataset.txt = btn.textContent;
-    btn.innerHTML = `<span class="spinner"></span>${text||"Memproses..."}`;
-  }else{
-    btn.textContent = btn.dataset.txt || btn.textContent;
-  }
-}
-
-/* ======================= RESET ======================= */
-function resetUI(){
-  currentPeserta = null;
-  $("noKadPengenalan").value = "";
-  $("pesertaDetail").style.display = "none";
-  $("detailPesertaContainer").style.display = "none";
-  $("btnSahkanKehadiran").disabled = false;
-  $("btnSahkanKehadiran").textContent = "Sahkan Kehadiran";
-  setStep("Cari");
-}
-
 /* ======================= CARI PESERTA ======================= */
 $("btnCariPeserta").onclick = () => {
   const noPersonal = $("noPersonal").value.trim();  // Gantikan noKadPengenalan dengan noPersonal
@@ -699,7 +642,7 @@ $("btnSahkanKehadiran").onclick = () => {
   const btn = $("btnSahkanKehadiran");
   lockBtn(btn,true,"Mengesahkan...");
 
-  api("sah",$("noKadPengenalan").value.trim())
+  api("sah",$("noPersonal").value.trim())  // Gantikan noKadPengenalan dengan noPersonal
     .then(r=>{
       lockBtn(btn,false);
 
@@ -725,7 +668,7 @@ $("btnSahkanKehadiran").onclick = () => {
 
 /* ======================= SEMAK MARKAH ======================= */
 $("btnSemakMarkah").onclick = () => {
-  api("markah",$("noKadPengenalan").value.trim())
+  api("markah",$("noPersonal").value.trim())  // Gantikan noKadPengenalan dengan noPersonal
     .then(r=>{
       if(!r || !r.markah || Number(r.markah)<=0){
         showToast("info","Markah Belum Tersedia","Markah belum direkodkan.");
