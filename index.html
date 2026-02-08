@@ -612,8 +612,8 @@ $("btnCariPeserta").onclick = () => {
       if(!p) return showToast("err", "Tidak ditemui", "Peserta tidak ditemui.");
 
       currentPeserta = p;
-      $("pesertaNama").textContent = p.nama || "-";
-      $("pesertaAgensi").textContent = p.agensi || "-";
+      $("pesertaNama").textContent = p.nama || "-";  // Kolum F untuk "Nama"
+      $("pesertaAgensi").textContent = p.agensi || "-";  // Kolum G untuk "Cawangan / Bahagian"
       $("pesertaDetail").style.display = "block";
 
       if(p.sudahSah){
