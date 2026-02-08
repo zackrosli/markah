@@ -472,8 +472,11 @@ circle{fill:none;stroke-width:14;stroke-linecap:round}
     <div class="card">
 
       <div class="field">
-        <label for="noKadPengenalan">No. Kad Pengenalan / No. Badan</label>
-        <input id="noKadPengenalan" placeholder="Masukkan No. KP tanpa (-) / No. Badan tanpa (G)" autocomplete="off" />
+        <!-- Ubah ini -->
+
+<label for="noPersonal">No. Personal</label>
+<input id="noPersonal" placeholder="Masukkan No. Personal" autocomplete="off" />
+
       </div>
 
       <button id="btnCariPeserta" class="btn btn-primary" type="button">
@@ -589,12 +592,14 @@ const $ = (id) => document.getElementById(id);
 /* ======================= API CONFIG ======================= */
 const API_URL = "https://script.google.com/macros/s/AKfycbwxUHZl6-3RBf6p_YrkAgJ9cbb3maxhASO7pmjmjq-Auqokf7va5GsOxEzbs-UTNZqC/exec";
 
-function api(action, noKP){
+// Ubah kepada 'noPersonal'
+function api(action, noPersonal){
   return fetch(API_URL, {
     method: "POST",
-    body: JSON.stringify({ action, noKP })
+    body: JSON.stringify({ action, noPersonal })
   }).then(res => res.json());
 }
+
 
 
 /* ======================= STATE ======================= */
@@ -654,15 +659,14 @@ function resetUI(){
 
 /* ======================= CARI PESERTA ======================= */
 $("btnCariPeserta").onclick = () => {
-  const noKP = $("noKadPengenalan").value.trim();
-  if(!noKP) return showToast("err","Makluman","Sila masukkan No. KP / No. Badan.");
-
-  lockBtn($("btnCariPeserta"),true,"Mencari...");
-
-  api("cari",noKP)
-    .then(p=>{
-      lockBtn($("btnCariPeserta"),false);
-      if(!p) return showToast("err","Tidak ditemui","Peserta tidak ditemui.");
+  const noPersonal = $("noPersonal").value.trim();  // Gantikan noKadPengenalan dengan noPersonal
+  if(!noPersonal) return showToast("err","Makluman","Sila masukkan No. Personal.");
+  
+  lockBtn($("btnCariPeserta"), true, "Mencari...");
+  api("cari", noPersonal)  // Gantikan dengan noPersonal
+    .then(p => {
+      lockBtn($("btnCariPeserta"), false);
+      if(!p) return showToast("err", "Tidak ditemui", "Peserta tidak ditemui.");
 
       currentPeserta = p;
       $("pesertaNama").textContent = p.nama || "-";
@@ -676,16 +680,16 @@ $("btnCariPeserta").onclick = () => {
         $("noDetailPeserta").textContent = p.detail ?? "-";
         $("detailPesertaContainer").style.display = "block";
         setStep("Semak");
-      }else{
+      } else {
         $("btnSahkanKehadiran").disabled = false;
         $("btnSahkanKehadiran").textContent = "Sahkan Kehadiran";
         $("detailPesertaContainer").style.display = "none";
         setStep("Sah");
       }
 
-      showToast("ok","Berjaya","Maklumat peserta ditemui.");
+      showToast("ok", "Berjaya", "Maklumat peserta ditemui.");
     })
-    .catch(()=>showToast("err","Ralat","Ralat semasa carian."));
+    .catch(() => showToast("err", "Ralat", "Ralat semasa carian."));
 };
 
 /* ======================= SAHKAN KEHADIRAN ======================= */
