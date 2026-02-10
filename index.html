@@ -428,6 +428,9 @@ circle{fill:none;stroke-width:14;stroke-linecap:round}
   margin-bottom:10px;
 }
 
+
+
+
 /* mobile spacing adjustments */
 @media (max-width: 420px){
   .card{ padding:16px; }
@@ -468,12 +471,8 @@ circle{fill:none;stroke-width:14;stroke-linecap:round}
     <div class="card">
 
       <div class="field">
-        <!-- Ubah ini -->
-
-<label for="noPersonal">No. Personal</label>
-<input id="noPersonal" placeholder="Masukkan No. Personal" autocomplete="off" />
-
-
+        <label for="noKadPengenalan">No. Kad Pengenalan / No. Badan</label>
+        <input id="noKadPengenalan" placeholder="Masukkan No. KP tanpa (-) / No. Badan tanpa (G)" autocomplete="off" />
       </div>
 
       <button id="btnCariPeserta" class="btn btn-primary" type="button">
@@ -512,7 +511,7 @@ circle{fill:none;stroke-width:14;stroke-linecap:round}
       <div id="pesertaDetail">
         <table class="info-table">
           <tr><th>Nama</th><td id="pesertaNama">-</td></tr>
-          <tr><th>Cawangan / Bahagian</th><td id="pesertaAgensi">-</td></tr>
+          <tr><th>Jabatan / Agensi</th><td id="pesertaAgensi">-</td></tr>
         </table>
 
         <button id="btnSahkanKehadiran" class="btn btn-primary" type="button">
@@ -540,7 +539,7 @@ circle{fill:none;stroke-width:14;stroke-linecap:round}
     <div class="report-wrap">
 
       <div class="result-card">
-  <div class="program-title">LATIHAN MENEMBAK TAHUNAN IPD KLIA 2026</div>
+  <div class="program-title">PROGRAM MENEMBAK ANTARA AGENSI KLIA 2025</div>
   <div class="label">MARKAH</div>
 
         <div class="score-circle">
@@ -587,30 +586,86 @@ circle{fill:none;stroke-width:14;stroke-linecap:round}
 const $ = (id) => document.getElementById(id);
 
 /* ======================= API CONFIG ======================= */
-const API_URL = "https://script.google.com/macros/s/AKfycbzQ_vhyvrSBUBmPbWv_vIIwaG3OaVvuot12DwOoxoH12vHrjak6BKOSPli13WZBS1mo/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwSG-G8n3BQKte2Jk4ybJ7lI-wY0BPOOzqEaLP7W7DomV17ECyj1l7-Zonag9eYd748/exec";
 
-// Ubah kepada 'noPersonal'
-function api(action, noPersonal){
+function api(action, noKP){
   return fetch(API_URL, {
     method: "POST",
-    body: JSON.stringify({ action, noPersonal })
+    body: JSON.stringify({ action, noKP })
   }).then(res => res.json());
+}
+
+
+/* ======================= STATE ======================= */
+let currentPeserta = null;
+
+/* ======================= TOAST ======================= */
+let toastTimer = null;
+function showToast(type, title, msg){
+  const toast = $("toast");
+  const badge = $("toastBadge");
+  badge.className = "badge " + (type==="ok"?"ok":type==="err"?"err":"info");
+  $("toastTitle").textContent = title || "Info";
+  $("toastMsg").textContent = msg || "-";
+  toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>toast.classList.remove("show"),2800);
+}
+
+/* ======================= STEP ======================= */
+function setStep(which){
+  ["Cari","Sah","Semak"].forEach(s=>{
+    $("step"+s).classList.remove("active","done");
+  });
+  if(which==="Cari") $("stepCari").classList.add("active");
+  if(which==="Sah"){
+    $("stepCari").classList.add("done");
+    $("stepSah").classList.add("active");
+  }
+  if(which==="Semak"){
+    $("stepCari").classList.add("done");
+    $("stepSah").classList.add("done");
+    $("stepSemak").classList.add("active");
+  }
+}
+
+/* ======================= BUTTON ======================= */
+function lockBtn(btn, locked, text){
+  btn.disabled = locked;
+  if(locked){
+    btn.dataset.txt = btn.textContent;
+    btn.innerHTML = `<span class="spinner"></span>${text||"Memproses..."}`;
+  }else{
+    btn.textContent = btn.dataset.txt || btn.textContent;
+  }
+}
+
+/* ======================= RESET ======================= */
+function resetUI(){
+  currentPeserta = null;
+  $("noKadPengenalan").value = "";
+  $("pesertaDetail").style.display = "none";
+  $("detailPesertaContainer").style.display = "none";
+  $("btnSahkanKehadiran").disabled = false;
+  $("btnSahkanKehadiran").textContent = "Sahkan Kehadiran";
+  setStep("Cari");
 }
 
 /* ======================= CARI PESERTA ======================= */
 $("btnCariPeserta").onclick = () => {
-  const noPersonal = $("noPersonal").value.trim();  // Gantikan noKadPengenalan dengan noPersonal
-  if(!noPersonal) return showToast("err","Makluman","Sila masukkan No. Personal.");
-  
-  lockBtn($("btnCariPeserta"), true, "Mencari...");
-  api("cari", noPersonal)  // Gantikan dengan noPersonal
-    .then(p => {
-      lockBtn($("btnCariPeserta"), false);
-      if(!p) return showToast("err", "Tidak ditemui", "Peserta tidak ditemui.");
+  const noKP = $("noKadPengenalan").value.trim();
+  if(!noKP) return showToast("err","Makluman","Sila masukkan No. KP / No. Badan.");
+
+  lockBtn($("btnCariPeserta"),true,"Mencari...");
+
+  api("cari",noKP)
+    .then(p=>{
+      lockBtn($("btnCariPeserta"),false);
+      if(!p) return showToast("err","Tidak ditemui","Peserta tidak ditemui.");
 
       currentPeserta = p;
-      $("pesertaNama").textContent = p.nama || "-";  // Kolum F untuk "Nama"
-      $("pesertaAgensi").textContent = p.agensi || "-";  // Kolum G untuk "Cawangan / Bahagian"
+      $("pesertaNama").textContent = p.nama || "-";
+      $("pesertaAgensi").textContent = p.agensi || "-";
       $("pesertaDetail").style.display = "block";
 
       if(p.sudahSah){
@@ -620,31 +675,30 @@ $("btnCariPeserta").onclick = () => {
         $("noDetailPeserta").textContent = p.detail ?? "-";
         $("detailPesertaContainer").style.display = "block";
         setStep("Semak");
-      } else {
+      }else{
         $("btnSahkanKehadiran").disabled = false;
         $("btnSahkanKehadiran").textContent = "Sahkan Kehadiran";
         $("detailPesertaContainer").style.display = "none";
         setStep("Sah");
       }
 
-      showToast("ok", "Berjaya", "Maklumat peserta ditemui.");
+      showToast("ok","Berjaya","Maklumat peserta ditemui.");
     })
-    .catch(() => showToast("err", "Ralat", "Ralat semasa carian."));
+    .catch(()=>showToast("err","Ralat","Ralat semasa carian."));
 };
 
 /* ======================= SAHKAN KEHADIRAN ======================= */
 $("btnSahkanKehadiran").onclick = () => {
-  if (!currentPeserta) return;
+  if(!currentPeserta) return;
 
   const btn = $("btnSahkanKehadiran");
-  lockBtn(btn, true, "Mengesahkan...");
+  lockBtn(btn,true,"Mengesahkan...");
 
-  api("sah", $("noPersonal").value.trim())  // Gantikan noKadPengenalan dengan noPersonal
-    .then(r => {
-      console.log("Respons dari API: ", r);  // Log respons API untuk debugging
-      lockBtn(btn, false);
+  api("sah",$("noKadPengenalan").value.trim())
+    .then(r=>{
+      lockBtn(btn,false);
 
-      if (r.status === "sah" || r.status === "sudah_sah") {
+      if(r.status==="sah"||r.status==="sudah_sah"){
         btn.disabled = true;
         btn.textContent = "Kehadiran Telah Disahkan";
 
@@ -656,20 +710,17 @@ $("btnSahkanKehadiran").onclick = () => {
         currentPeserta.detail = r.detail;
 
         setStep("Semak");
-        showToast("ok", "Disahkan", "Kehadiran berjaya disahkan.");
-      } else {
-        showToast("err", "Gagal", r.mesej || "Gagal sahkan kehadiran.");
+        showToast("ok","Disahkan","Kehadiran berjaya disahkan.");
+      }else{
+        showToast("err","Gagal",r.mesej||"Gagal sahkan kehadiran.");
       }
     })
-    .catch(() => {
-      showToast("err", "Ralat", "Ralat semasa pengesahan.");
-      lockBtn(btn, false); // Unlock button on error
-    });
+    .catch(()=>showToast("err","Ralat","Ralat semasa pengesahan."));
 };
 
 /* ======================= SEMAK MARKAH ======================= */
 $("btnSemakMarkah").onclick = () => {
-  api("markah",$("noPersonal").value.trim())  // Gantikan noKadPengenalan dengan noPersonal
+  api("markah",$("noKadPengenalan").value.trim())
     .then(r=>{
       if(!r || !r.markah || Number(r.markah)<=0){
         showToast("info","Markah Belum Tersedia","Markah belum direkodkan.");
@@ -716,6 +767,8 @@ function kembaliKeUtama(){
 
 $("btnReset").onclick = resetUI;
 </script>
+
+
 
 </body>
 </html>
